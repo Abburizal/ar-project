@@ -10,7 +10,6 @@ import com.example.arpackagevalidator.ui.viewmodel.MeasurementUiState
 import com.google.ar.core.HitResult
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.Node
-import com.google.ar.sceneform.Scene
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Color as ArColor
@@ -28,10 +27,7 @@ class ArInteractionManager(
     private val context: Context,
     private val arFragment: ArFragment
 ) {
-    // FIX #1: Akses scene dan root node yang benar
-    private val scene: Scene get() = arFragment.arSceneView.scene
-    private val rootNode: Node get() = scene.camera.parent ?: Node()
-    
+    private val scene get() = arFragment.arSceneView.scene
     private val managedNodes = mutableListOf<Node>()
 
     private val sphereMaterial: CompletableFuture<Material>
@@ -39,7 +35,10 @@ class ArInteractionManager(
     private val heightMaterial: CompletableFuture<Material>
     private val freeLineMaterial: CompletableFuture<Material>
     private val boxMaterial: CompletableFuture<Material>
-    private val labelRenderable: CompletableFuture<ViewRenderable>
+    
+    // FIX: Lazy load ViewRenderable untuk mencegah crash
+    private var labelRenderable: CompletableFuture<ViewRenderable>? = null
+    private var isViewRenderableSupported = true
 
     private val allAssetsFuture: CompletableFuture<Void>
 
@@ -51,27 +50,59 @@ class ArInteractionManager(
     }
 
     init {
+        // Material initialization yang aman
         sphereMaterial = MaterialFactory.makeOpaqueWithColor(context, ArColor(Color.RED))
         lineMaterial = MaterialFactory.makeOpaqueWithColor(context, ArColor(Color.BLUE))
         heightMaterial = MaterialFactory.makeOpaqueWithColor(context, ArColor(Color.GREEN))
         freeLineMaterial = MaterialFactory.makeOpaqueWithColor(context, ArColor(Color.CYAN))
         boxMaterial = MaterialFactory.makeTransparentWithColor(context, ArColor(Color.argb(120, 0, 255, 0)))
-        labelRenderable = ViewRenderable.builder().setView(context, R.layout.distance_text_layout).build()
-
+        
+        // FIX: Jangan load ViewRenderable di constructor
+        // labelRenderable akan dibuat saat dibutuhkan
+        
         allAssetsFuture = CompletableFuture.allOf(
-            sphereMaterial, lineMaterial, heightMaterial, freeLineMaterial, boxMaterial, labelRenderable
+            sphereMaterial, lineMaterial, heightMaterial, freeLineMaterial, boxMaterial
         )
 
-        scene.addOnUpdateListener {
-            val cameraPosition = scene.camera.worldPosition
-            for (node in managedNodes) {
-                if (node.renderable is ViewRenderable) {
-                    // FIX: Gunakan method yang tersedia untuk Vector3
-                    val direction = Vector3.subtract(cameraPosition, node.worldPosition)
-                    node.worldRotation = Quaternion.lookRotation(direction, Vector3.up())
+        setupSceneUpdateListener()
+    }
+
+    private fun setupSceneUpdateListener() {
+        try {
+            scene.addOnUpdateListener {
+                val cameraPosition = scene.camera.worldPosition
+                for (node in managedNodes) {
+                    if (node.renderable is ViewRenderable) {
+                        val direction = Vector3.subtract(cameraPosition, node.worldPosition)
+                        node.worldRotation = Quaternion.lookRotation(direction, Vector3.up())
+                    }
                 }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up scene update listener: ${e.message}")
         }
+    }
+
+    // FIX: Safe method untuk mendapatkan ViewRenderable
+    private fun getLabelRenderable(): CompletableFuture<ViewRenderable>? {
+        if (!isViewRenderableSupported) return null
+        
+        if (labelRenderable == null) {
+            try {
+                labelRenderable = ViewRenderable.builder()
+                    .setView(context, R.layout.distance_text_layout)
+                    .build()
+            } catch (e: UnsatisfiedLinkError) {
+                Log.e(TAG, "ViewRenderable not supported on this device: ${e.message}")
+                isViewRenderableSupported = false
+                return null
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to create ViewRenderable: ${e.message}")
+                isViewRenderableSupported = false
+                return null
+            }
+        }
+        return labelRenderable
     }
 
     fun drawState(state: MeasurementUiState) {
@@ -141,70 +172,97 @@ class ArInteractionManager(
     }
 
     private fun drawSphereOn(anchorNode: AnchorNode) {
-        val sphereModel = ShapeFactory.makeSphere(SPHERE_RADIUS, Vector3.zero(), sphereMaterial.get())
-        addNodeToScene(sphereModel, parent = anchorNode)
-    }
-
-    private fun drawLine(p1: Vector3, p2: Vector3, material: Material, distance: Float) {
-        // FIX: Gunakan Vector3.subtract yang tersedia
-        val difference = Vector3.subtract(p2, p1)
-        if (difference.length() == 0f) return
-        
-        // FIX #2: Ganti Vector3.add dengan kalkulasi manual
-        val position = Vector3(
-            p1.x + difference.x * 0.5f,
-            p1.y + difference.y * 0.5f,
-            p1.z + difference.z * 0.5f
-        )
-        
-        val rotation = Quaternion.lookRotation(difference, Vector3.up())
-        val lineModel = ShapeFactory.makeCube(
-            Vector3(LINE_THICKNESS, LINE_THICKNESS, difference.length()), 
-            Vector3.zero(), 
-            material
-        )
-        val lineNode = addNodeToScene(lineModel, worldPosition = position, worldRotation = rotation)
-        addDistanceLabel(lineNode, distance)
-    }
-
-    private fun drawPreviewBox(state: MeasurementUiState) {
-        if (state.points.size < 4) return
-        val size = Vector3(state.width / 100f, state.height / 100f, state.length / 100f)
-        val p0 = state.points[0]
-        val p1 = state.points[1]
-        val p2 = state.points[2]
-        
-        // FIX: Gunakan Vector3.subtract yang tersedia
-        val vecLength = Vector3.subtract(p1, p0)
-        val vecWidth = Vector3.subtract(p2, p1)
-        
-        // FIX #2: Ganti Vector3.add dengan kalkulasi manual
-        val center = Vector3(
-            p0.x + vecLength.x * 0.5f + vecWidth.x * 0.5f,
-            p0.y + vecLength.y * 0.5f + vecWidth.y * 0.5f + state.height / 200f,
-            p0.z + vecLength.z * 0.5f + vecWidth.z * 0.5f
-        )
-        
-        val boxModel = ShapeFactory.makeCube(size, Vector3.zero(), boxMaterial.get())
-        addNodeToScene(boxModel, worldPosition = center)
-    }
-
-    private fun addDistanceLabel(parentNode: Node, distance: Float) {
-        labelRenderable.thenAccept { renderable ->
-            val labelView = renderable.makeCopy()
-            (labelView.view as TextView).text = "%.2f cm".format(distance)
-            addNodeToScene(
-                labelView, 
-                parent = parentNode, 
-                localPosition = Vector3(0f, LABEL_Y_OFFSET, 0f)
-            )
+        try {
+            val sphereModel = ShapeFactory.makeSphere(SPHERE_RADIUS, Vector3.zero(), sphereMaterial.get())
+            addNodeToScene(sphereModel, parent = anchorNode)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create sphere: ${e.message}")
         }
     }
 
-    // FIX #1: Gunakan rootNode yang sudah didefinisikan
+    private fun drawLine(p1: Vector3, p2: Vector3, material: Material, distance: Float) {
+        try {
+            val difference = Vector3.subtract(p2, p1)
+            if (difference.length() == 0f) return
+            
+            // Gunakan manual calculation untuk menghindari Vector3.add error
+            val position = Vector3(
+                p1.x + difference.x * 0.5f,
+                p1.y + difference.y * 0.5f,
+                p1.z + difference.z * 0.5f
+            )
+            
+            val rotation = Quaternion.lookRotation(difference, Vector3.up())
+            val lineModel = ShapeFactory.makeCube(
+                Vector3(LINE_THICKNESS, LINE_THICKNESS, difference.length()), 
+                Vector3.zero(), 
+                material
+            )
+            val lineNode = addNodeToScene(lineModel, worldPosition = position, worldRotation = rotation)
+            
+            // FIX: Safe label creation
+            addDistanceLabelSafe(lineNode, distance)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create line: ${e.message}")
+        }
+    }
+
+    private fun drawPreviewBox(state: MeasurementUiState) {
+        try {
+            if (state.points.size < 4) return
+            val size = Vector3(state.width / 100f, state.height / 100f, state.length / 100f)
+            val p0 = state.points[0]
+            val p1 = state.points[1]
+            val p2 = state.points[2]
+            
+            val vecLength = Vector3.subtract(p1, p0)
+            val vecWidth = Vector3.subtract(p2, p1)
+            
+            // Manual calculation untuk center
+            val center = Vector3(
+                p0.x + vecLength.x * 0.5f + vecWidth.x * 0.5f,
+                p0.y + vecLength.y * 0.5f + vecWidth.y * 0.5f + state.height / 200f,
+                p0.z + vecLength.z * 0.5f + vecWidth.z * 0.5f
+            )
+            
+            val boxModel = ShapeFactory.makeCube(size, Vector3.zero(), boxMaterial.get())
+            addNodeToScene(boxModel, worldPosition = center)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create preview box: ${e.message}")
+        }
+    }
+
+    // FIX: Safe label creation yang tidak akan crash aplikasi
+    private fun addDistanceLabelSafe(parentNode: Node, distance: Float) {
+        val labelFuture = getLabelRenderable()
+        if (labelFuture == null) {
+            Log.w(TAG, "ViewRenderable not supported, skipping label for distance: $distance cm")
+            return
+        }
+        
+        labelFuture.thenAccept { renderable ->
+            try {
+                val labelView = renderable.makeCopy()
+                (labelView.view as TextView).text = "%.2f cm".format(distance)
+                addNodeToScene(
+                    labelView, 
+                    parent = parentNode, 
+                    localPosition = Vector3(0f, LABEL_Y_OFFSET, 0f)
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to add distance label: ${e.message}")
+            }
+        }.exceptionally { throwable ->
+            Log.e(TAG, "Failed to create distance label: ${throwable.message}")
+            null
+        }
+    }
+
     private fun addNodeToScene(
         renderable: Renderable,
-        parent: Node = rootNode,
+        parent: Node = getSceneRoot(),
         worldPosition: Vector3? = null,
         worldRotation: Quaternion? = null,
         localPosition: Vector3? = null
@@ -218,5 +276,15 @@ class ArInteractionManager(
         }
         managedNodes.add(node)
         return node
+    }
+
+    // FIX: Safe method untuk mendapatkan scene root
+    private fun getSceneRoot(): Node {
+        return try {
+            scene.root ?: scene.camera.parent ?: Node()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get scene root: ${e.message}")
+            Node()
+        }
     }
 }
