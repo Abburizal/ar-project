@@ -15,7 +15,7 @@ import com.example.arpackagevalidator.R
 import com.example.arpackagevalidator.databinding.ActivityMainBinding
 import com.example.arpackagevalidator.ui.viewmodel.MeasurementUiState
 import com.example.arpackagevalidator.ui.viewmodel.MeasurementViewModel
-import com.example.arpackagevalidator.utils.ArInteractionManager
+import com.example.arpackagevalidator.util.ArInteractionManager
 import com.example.arpackagevalidator.util.DialogHelper
 import com.example.arpackagevalidator.util.FileExporter
 import com.google.ar.core.ArCoreApk
@@ -70,9 +70,6 @@ class MainActivity : AppCompatActivity() {
         setupObservers()
     }
 
-    // Catatan: onResume, onPause, onDestroy dihapus karena ArFragment menangani siklus hidupnya sendiri.
-    // Ini menyederhanakan kode dan menghindari potensi konflik.
-
     // --- Setup Methods ---
 
     private fun initializeCoreHelpers() {
@@ -110,7 +107,6 @@ class MainActivity : AppCompatActivity() {
             btnSave.setOnClickListener { saveAndShowExportDialog() }
             btnHistory.setOnClickListener { showHistoryDialog() }
 
-            // Panggil viewModel.startCalibration di sini
             btnCalibrate.setOnClickListener {
                 dialogHelper.showCalibrationDialog { knownLength ->
                     viewModel.startCalibration(knownLength)
@@ -122,7 +118,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun setupObservers() {
         viewModel.uiState.observe(this) { state ->
             if (state == null) return@observe
@@ -131,9 +126,9 @@ class MainActivity : AppCompatActivity() {
                 arInteractionManager.drawState(state)
             }
         }
+        
         viewModel.calibrationFactor.observe(this) { factor ->
-            // Pastikan Anda memiliki TextView dengan id "tv_calibration_factor" di layout XML Anda
-            binding.tvCalibrationFactor.text = "Faktor Kalibrasi: ${"%.3f".format(factor)}"
+            binding.tvCalibrationFactor.text = "Faktor Kalibrasi: ${"%.3f".format(factor ?: 1.0f)}"
         }
 
         viewModel.userMessage.observe(this) { message ->
