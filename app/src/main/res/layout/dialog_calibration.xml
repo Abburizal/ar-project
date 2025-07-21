@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Masukkan panjang objek referensi:"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/et_known_length"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contoh: 30"
+        android:inputType="numberDecimal"
+        android:textSize="18sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="cm"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>

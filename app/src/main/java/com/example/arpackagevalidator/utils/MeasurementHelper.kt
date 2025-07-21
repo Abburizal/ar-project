@@ -1,4 +1,4 @@
-package com.example.arpackagevalidator
+package com.example.arpackagevalidator.utils
 
 import android.app.Activity
 import android.content.Context
@@ -10,7 +10,6 @@ import android.provider.Settings
 import android.view.Display
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.Surface
 import android.view.WindowManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
