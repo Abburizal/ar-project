@@ -30,7 +30,7 @@ class ArInteractionManager(
 ) {
     // FIX #1: Akses scene dan root node yang benar
     private val scene: Scene get() = arFragment.arSceneView.scene
-    private val rootNode: Node get() = scene.root ?: scene.camera.parent ?: Node()
+    private val rootNode: Node get() = scene.camera.parent ?: Node()
     
     private val managedNodes = mutableListOf<Node>()
 
