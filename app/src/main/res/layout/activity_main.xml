@@ -10,23 +10,21 @@
         android:id="@+id/ar_fragment"
         android:name="com.google.ar.sceneform.ux.ArFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" /> 
-        
-        <TextView
-            android:id="@+id/tv_calibration_factor"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginBottom="16dp"
-            android:background="#80000000"
-            android:padding="8dp"
-            android:text="Faktor Kalibrasi: 1.000"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toTopOf="@+id/control_panel"
-            app:layout_constraintStart_toStartOf="parent" 
-        />
+        android:layout_height="match_parent" />
 
+    <TextView
+        android:id="@+id/tv_calibration_factor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:text="Faktor Kalibrasi: 1.000"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@+id/control_panel"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Panel Kontrol -->
     <LinearLayout
@@ -38,8 +36,7 @@
         android:background="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent">
 
-
-    <!-- (BARU) Tombol Ganti Mode -->
+        <!-- Tombol Ganti Mode -->
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/toggle_mode"
             android:layout_width="match_parent"
