@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- File paths untuk FileProvider - mengatasi security pada Android 7+ -->
+    
+    <!-- Internal storage -->
+    <files-path name="internal_files" path="." />
+    
+    <!-- External files directory -->
+    <external-files-path name="external_files" path="." />
+    
+    <!-- Documents directory untuk export files -->
+    <external-files-path name="exported_files" path="Documents/" />
+    
+    <!-- Cache directory -->
+    <cache-path name="cache" path="." />
+    
+    <!-- External cache -->
+    <external-cache-path name="external_cache" path="." />
+    
+</paths>
