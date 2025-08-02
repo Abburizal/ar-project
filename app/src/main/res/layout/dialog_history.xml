@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Riwayat Pengukuran"
-        android:textSize="20sp"
+        android:text="@string/measurement_history"
+        android:textSize="18sp"
         android:textStyle="bold"
-        android:padding="16dp" />
+        android:padding="16dp"
+        android:background="@color/design_default_color_primary"
+        android:textColor="@android:color/white" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_measurements"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="400dp"
+        android:layout_margin="8dp" />
 
 </LinearLayout>

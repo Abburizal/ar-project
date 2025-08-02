@@ -1,12 +1,12 @@
-package com.example.arpackagevalidator.ui.viewmodel
+package com.example.arpackagevalidator.ui.viewmodel // Sesuaikan package Anda
 
-import android.graphics.Color
 import com.example.arpackagevalidator.ui.MeasurementMode
 import com.google.ar.sceneform.math.Vector3
 
 data class MeasurementUiState(
     val mode: MeasurementMode = MeasurementMode.BOX,
     val isPlacing: Boolean = false,
+    val isCalibrating: Boolean = false,
     val points: List<Vector3> = emptyList(),
     val length: Float = 0f,
     val width: Float = 0f,
@@ -14,16 +14,6 @@ data class MeasurementUiState(
     val classification: String = "",
     val isUndoEnabled: Boolean = false,
     val isSaveEnabled: Boolean = false,
-    val isCalibrating: Boolean = false,
-    val calibrationKnownLength: Float = 0f
-) {
-    fun getClassificationColor(): Int {
-        return when (classification) {
-            "SMALL" -> Color.parseColor("#4CAF50")
-            "MEDIUM" -> Color.parseColor("#2196F3")
-            "LARGE" -> Color.parseColor("#9C27B0")
-            "CUSTOM" -> Color.parseColor("#F44336")
-            else -> Color.BLACK
-        }
-    }
-}
+    val userMessage: String = "Selamat datang! Tekan 'Mulai Ukur'.",
+    val boxStep: BoxMeasurementStep = BoxMeasurementStep.SET_ORIGIN
+)

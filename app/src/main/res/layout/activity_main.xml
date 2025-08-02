@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -11,6 +12,21 @@
         android:name="com.google.ar.sceneform.ux.ArFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:text="Mencari permukaan..."
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/control_panel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/tv_calibration_factor"
@@ -26,132 +42,133 @@
         app:layout_constraintBottom_toTopOf="@+id/control_panel"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Panel Kontrol -->
-    <LinearLayout
+    <!-- PERBAIKAN: Panel Kontrol direstrukturisasi menggunakan ConstraintLayout untuk menyederhanakan hirarki view -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/control_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:background="#CCFFFFFF"
         android:padding="16dp"
-        android:background="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Tombol Ganti Mode -->
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/toggle_mode"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:layout_marginBottom="8dp"
-            app:singleSelection="true"
-            app:checkedButton="@+id/btn_mode_box">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:checkedButton="@+id/btn_mode_box"
+            app:singleSelection="true">
 
             <Button
                 android:id="@+id/btn_mode_box"
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Mode Kotak" />
 
             <Button
                 android:id="@+id/btn_mode_free"
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Mode Bebas" />
 
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
-        <!-- Baris 1: Tombol Utama -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btn_measure"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp"
+            android:text="Mulai Ukur"
+            app:layout_constraintEnd_toStartOf="@+id/btn_reset"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toggle_mode" />
 
-            <Button
-                android:id="@+id/btn_measure"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Mulai Ukur"
-                android:layout_marginEnd="4dp" />
-
-            <Button
-                android:id="@+id/btn_reset"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Reset"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp" />
-
-            <Button
-                android:id="@+id/btn_save"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Simpan"
-                android:layout_marginStart="4dp"
-                android:enabled="false" />
-
-        </LinearLayout>
-
-        <!-- Baris 2: Tombol Tambahan -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btn_reset"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="8dp">
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="Reset"
+            app:layout_constraintEnd_toStartOf="@+id/btn_save"
+            app:layout_constraintStart_toEndOf="@id/btn_measure"
+            app:layout_constraintTop_toTopOf="@id/btn_measure" />
 
-            <Button
-                android:id="@+id/btn_undo"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Undo"
-                android:layout_marginEnd="4dp"
-                android:enabled="false"/>
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:enabled="false"
+            android:text="Simpan"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_reset"
+            app:layout_constraintTop_toTopOf="@id/btn_measure" />
 
-            <Button
-                android:id="@+id/btn_calibrate"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Kalibrasi"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp" />
+        <Button
+            android:id="@+id/btn_undo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp"
+            android:enabled="false"
+            android:text="Undo"
+            app:layout_constraintEnd_toStartOf="@+id/btn_calibrate"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_measure" />
 
-            <Button
-                android:id="@+id/btn_history"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Riwayat"
-                android:layout_marginStart="4dp" />
+        <Button
+            android:id="@+id/btn_calibrate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="Kalibrasi"
+            app:layout_constraintEnd_toStartOf="@+id/btn_history"
+            app:layout_constraintStart_toEndOf="@id/btn_undo"
+            app:layout_constraintTop_toTopOf="@id/btn_undo" />
 
-        </LinearLayout>
+        <Button
+            android:id="@+id/btn_history"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Riwayat"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_calibrate"
+            app:layout_constraintTop_toTopOf="@id/btn_undo" />
 
-        <!-- Info Pengukuran -->
         <TextView
             android:id="@+id/tv_measurement"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="Belum ada pengukuran"
             android:textSize="16sp"
-            android:layout_marginTop="16dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_undo" />
 
         <TextView
             android:id="@+id/tv_classification"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:layout_marginTop="8dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_measurement"
+            tools:text="Klasifikasi: LARGE" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,4 +17,7 @@
     <!-- External cache -->
     <external-cache-path name="external_cache" path="." />
     
+    <files-path 
+        name="files" 
+        path="." />
 </paths>

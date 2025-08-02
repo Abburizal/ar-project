@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AR Package Validator</string>
+    <string name="default_distance">0.00 cm</string>
+    <string name="measurement_history">Riwayat Pengukuran</string>
 </resources>

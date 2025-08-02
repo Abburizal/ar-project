@@ -15,6 +15,10 @@ class MeasurementAdapter(
     private val onItemClick: (MeasurementData) -> Unit
 ) : RecyclerView.Adapter<MeasurementAdapter.ViewHolder>() {
 
+    companion object {
+        private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    }
+
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvDate: TextView = view.findViewById(R.id.tv_date)
         val tvDimensions: TextView = view.findViewById(R.id.tv_dimensions)
@@ -29,23 +33,24 @@ class MeasurementAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val measurement = measurements[position]
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
-        holder.tvDate.text = dateFormat.format(Date(measurement.timestamp))
-        holder.tvDimensions.text = "${measurement.length} × ${measurement.width} × ${measurement.height} cm"
+        holder.tvDate.text = dateFormat.format(measurement.timestamp)
+        holder.tvDimensions.text = "%.1f × %.1f × %.1f cm".format(measurement.length, measurement.width, measurement.height)
         holder.tvClassification.text = measurement.classification
 
-        // Set warna berdasarkan klasifikasi
-        val color = when (measurement.classification) {
+        holder.tvClassification.setTextColor(getClassificationColor(measurement.classification))
+
+        holder.itemView.setOnClickListener {
+            onItemClick(measurement)
+        }
+    }
+
+    private fun getClassificationColor(classification: String): Int {
+        return when (classification) {
             "SMALL" -> android.graphics.Color.GREEN
             "MEDIUM" -> android.graphics.Color.BLUE
             "LARGE" -> android.graphics.Color.MAGENTA
             else -> android.graphics.Color.RED
-        }
-        holder.tvClassification.setTextColor(color)
-
-        holder.itemView.setOnClickListener {
-            onItemClick(measurement)
         }
     }
 

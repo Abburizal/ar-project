@@ -1,18 +1,10 @@
-// file: com/example/arpackagevalidator/util/DialogHelper.kt
-package com.example.arpackagevalidator.util
+package com.example.arpackagevalidator.ui.dialog
 
+import android.app.AlertDialog
 import android.content.Context
 import android.view.LayoutInflater
-import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.arpackagevalidator.R
-import com.example.arpackagevalidator.data.MeasurementData
-import com.example.arpackagevalidator.ui.adapter.MeasurementAdapter
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.arpackagevalidator.databinding.DialogInputBinding // <-- PERHATIKAN: Import ViewBinding
 
 class DialogHelper(
     private val context: Context,
@@ -20,79 +12,69 @@ class DialogHelper(
 ) {
 
     fun showMessage(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        // Menggunakan Toast untuk pesan singkat adalah pilihan yang baik.
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
-    fun showCalibrationDialog(onConfirm: (Float) -> Unit) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_calibration, null)
-        val etKnownLength = dialogView.findViewById<EditText>(R.id.et_known_length)
-        AlertDialog.Builder(context)
-            .setTitle("Kalibrasi Pengukuran")
-            .setMessage("Ukur objek dengan panjang yang sudah diketahui (misal: penggaris 30cm)")
-            .setView(dialogView)
-            .setPositiveButton("Mulai") { _, _ ->
-                val knownLength = etKnownLength.text.toString().toFloatOrNull()
-                if (knownLength != null && knownLength > 0) {
-                    onConfirm(knownLength)
+    /**
+     * PERBAIKAN: Fungsi ini sekarang menggunakan ViewBinding dan mencegah dialog
+     * tertutup jika input tidak valid, memberikan pengalaman pengguna yang lebih baik.
+     * Nama fungsi juga disesuaikan menjadi 'showCalibrationInputDialog'.
+     */
+    fun showCalibrationInputDialog(onConfirm: (Float) -> Unit) {
+        // Menggunakan ViewBinding untuk mengakses layout dengan aman
+        val binding = DialogInputBinding.inflate(layoutInflater)
+
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("Kalibrasi Jarak")
+            .setView(binding.root)
+            // Set listener ke null agar kita bisa mengontrolnya secara manual
+            .setPositiveButton("OK", null)
+            .setNegativeButton("Batal", null)
+            .create()
+
+        // Logika ini akan berjalan setelah dialog ditampilkan
+        dialog.setOnShowListener {
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            positiveButton.setOnClickListener {
+                val distanceText = binding.inputEditText.text.toString()
+                val distance = distanceText.toFloatOrNull()
+
+                if (distance != null && distance > 0) {
+                    // Jika input valid, panggil callback dan tutup dialog
+                    onConfirm(distance)
+                    dialog.dismiss()
                 } else {
-                    showMessage("Masukkan panjang yang valid")
+                    // Jika input tidak valid, tampilkan error dan JANGAN tutup dialog
+                    binding.inputEditText.error = "Masukkan angka yang valid"
                 }
             }
-            .setNegativeButton("Batal", null)
-            .show()
+        }
+        dialog.show()
     }
 
-    fun showExportDialog(onCsvSelected: () -> Unit, onJsonSelected: () -> Unit) {
-        val options = arrayOf("Export ke CSV", "Export ke JSON", "Simpan saja")
+    fun showExportDialog(
+        onCsvSelected: () -> Unit,
+        onJsonSelected: () -> Unit
+    ) {
+        val options = arrayOf("CSV", "JSON")
+
         AlertDialog.Builder(context)
-            .setTitle("Pilih format export")
+            .setTitle("Pilih Format Export")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> onCsvSelected()
                     1 -> onJsonSelected()
-                    2 -> showMessage("Pengukuran berhasil disimpan")
                 }
             }
             .show()
     }
 
-    fun showHistoryDialog(
-        history: List<MeasurementData>,
-        onExport: () -> Unit,
-        onDetail: (MeasurementData) -> Unit
-    ) {
-        if (history.isNullOrEmpty()) {
-            showMessage("Belum ada riwayat pengukuran")
-            return
-        }
-        val dialogView = layoutInflater.inflate(R.layout.dialog_history, null)
-        val rvMeasurements = dialogView.findViewById<RecyclerView>(R.id.rv_measurements)
-        val adapter = MeasurementAdapter(history, onDetail)
-        rvMeasurements.adapter = adapter
-        rvMeasurements.layoutManager = LinearLayoutManager(context)
-
+    fun showHistoryDialog() {
         AlertDialog.Builder(context)
-            .setView(dialogView)
-            .setPositiveButton("Tutup", null)
-            .setNeutralButton("Export Semua") { _, _ -> onExport() }
-            .show()
-    }
-
-    fun showMeasurementDetailDialog(measurement: MeasurementData, onDelete: (MeasurementData) -> Unit) {
-        val detailText = """
-            Tanggal: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(measurement.timestamp))}
-            Panjang: ${String.format("%.2f", measurement.length)} cm
-            Lebar: ${String.format("%.2f", measurement.width)} cm
-            Tinggi: ${String.format("%.2f", measurement.height)} cm
-            Volume: ${String.format("%.4f", measurement.volume)} m³
-            Klasifikasi: ${measurement.classification}
-        """.trimIndent()
-
-        AlertDialog.Builder(context)
-            .setTitle("Detail Pengukuran")
-            .setMessage(detailText)
+            .setTitle("Riwayat Pengukuran")
+            .setMessage("Fitur riwayat belum tersedia")
             .setPositiveButton("OK", null)
-            .setNeutralButton("Hapus") { _, _ -> onDelete(measurement) }
             .show()
     }
 }
